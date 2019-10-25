@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	
+	<link rel="stylesheet" href="normalize.css">
+	<link rel="stylesheet" href="skeleton.css">
+	<link rel="stylesheet" type="text/css" href="stylesheet.css">
+	
+	<script type="text/javascript" src="biwascheme.js">
+	(define (tag-string tag attribs content)
+		(string-append "<" (symbol->string tag) (attribs->string attribs) ">" content "</" (symbol->string tag) ">"))
+
+	(define (attribs->string attribs-vect)
+			(define (attr->string attr) ; interne definition... ~private
+			(cond ((symbol? attr) (string-append " " (symbol->string attr)))
+				  ((string? attr) (string-append "'" attr "'"))
+				  (else "")))
+			
+			(if (vector? attribs-vect) (apply string-append (map attr->string (vector->list attribs-vect)))
+			""))
+
+	(define (generate markup)
+			(cond 	((null? markup) "")
+				((string? markup) markup)
+				((string? (car markup)) (string-append (car markup) (generate (cdr markup))))
+				((symbol? (car markup)) 
+				  (if (and (not (null? (cdr markup))) (vector? (cadr markup))) 
+					  (tag-string (car markup) (cadr markup) (generate (cddr markup)))
+					  (tag-string (car markup) #() (generate (cdr markup)))))
+
+
+				((list? (car markup)) 	(apply string-append (map generate markup)))
+				(else "")))
+	</script>
+	<script type="text/javascript">
+	
+	document.addEventListener("DOMContentLoaded", init, false);
+	
+	let input;
+	let output;
+	let button;
+	let biwa;
+	
+	function init() {
+		input = document.querySelector("textarea#input");
+		output = document.querySelector("textarea#output");
+		button = document.querySelector("button#eval");
+		code = document.querySelector("code#output");
+		
+		document.querySelector("button#copy").addEventListener("click", function(event) {
+			output.select();
+			document.execCommand("copy");
+		}, false);
+		
+		button.addEventListener("click", evaluate, false);
+		
+		biwa = new BiwaScheme.Interpreter((e) => {	alert(e);
+													location.reload();});
+		
+	}
+	
+	function evaluate() {
+		biwa.evaluate("(generate '" + input.value + ")", function(result) {
+		  //alert(result);
+		  output.textContent = process(result);
+		});
+	}
+	
+	function process(str) {
+		/*if(str.includes("<html>") || str.includes("<head>") || str.includes("<body>")) {
+			alert("Error: Cannot process top level html-tags");
+		}*/
+		var div = document.createElement('div');
+		div.innerHTML = str.trim();
+
+		return format(div, 0).innerHTML;
+	}
+
+	function format(node, level) {
+
+		var indentBefore = new Array(level++ + 1).join('  '),
+			indentAfter  = new Array(level - 1).join('  '),
+			textNode;
+
+		for (var i = 0; i < node.children.length; i++) {
+
+			textNode = document.createTextNode('\n' + indentBefore);
+			node.insertBefore(textNode, node.children[i]);
+
+			format(node.children[i], level);
+
+			if (node.lastElementChild == node.children[i]) {
+				textNode = document.createTextNode('\n' + indentAfter);
+				node.appendChild(textNode);
+			}
+		}
+
+		return node;
+	}
+	
+	
+	</script>
+</head>
+
+<body>
+	<header id="top">
+		<!--h2>'()-Markup</h2-->
+		<h2><span style="color:#6eb3d3;">'()</span> → <span style="color:#e67e22;">&lt;/&gt;</span></h2>
+	</header>
+	<main>
+		<code>
+			<textarea id="input" rows="10" cols="50"></textarea>
+			<!--b><div id="arrow">-></div></b-->
+			<textarea id="output" rows="4" cols="50"></textarea>
+		</code>
+		
+		<button id="eval">Evaluate</button>
+		<button id="copy">Copy</button>
+	</main>
+	
+</body>
+</html>
