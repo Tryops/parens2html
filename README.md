@@ -32,7 +32,7 @@ Every HTML tag is written in parenthesis like this: `(div "Content...")`
   <code>(div **#(id= "first" class= "space center")** "Text...")</code>
   
   To better distinguish them from tags, you can also use brackets **`#[]`** for attributes: <br>
-  <code>(div **#[id= "first" class= "space center"]** "Text")</code>
+  <code>(div **#[id= "first" class= "space center"]** "Text...")</code>
 
 Also see the demo example as a reference on how to write HTML with it. 
 [Try it out](https://tryops.github.io/parens2html/) and have fun!
