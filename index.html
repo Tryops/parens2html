@@ -5,121 +5,86 @@
 	<meta name="description" content="">
 	<meta name="author" content="">
 	
-	<link rel="stylesheet" href="normalize.css">
-	<link rel="stylesheet" href="skeleton.css">
-	<link rel="stylesheet" type="text/css" href="stylesheet.css">
-	
-	<script type="text/javascript" src="biwascheme.js">
-	(define (tag-string tag attribs content)
-		(string-append "<" (symbol->string tag) (attribs->string attribs) ">" content "</" (symbol->string tag) ">"))
-
-	(define (attribs->string attribs-vect)
-			(define (attr->string attr) ; interne definition... ~private
-			(cond ((symbol? attr) (string-append " " (symbol->string attr)))
-				  ((string? attr) (string-append "'" attr "'"))
-				  (else "")))
-			
-			(if (vector? attribs-vect) (apply string-append (map attr->string (vector->list attribs-vect)))
-			""))
-
-	(define (generate markup)
-			(cond 	((null? markup) "")
-				((string? markup) markup)
-				((string? (car markup)) (string-append (car markup) (generate (cdr markup))))
-				((symbol? (car markup)) 
-				  (if (and (not (null? (cdr markup))) (vector? (cadr markup))) 
-					  (tag-string (car markup) (cadr markup) (generate (cddr markup)))
-					  (tag-string (car markup) #() (generate (cdr markup)))))
-
-
-				((list? (car markup)) 	(apply string-append (map generate markup)))
-				(else "")))
-	</script>
-	<script type="text/javascript">
-	
-	document.addEventListener("DOMContentLoaded", init, false);
-	
-	let input;
-	let output;
-	let button;
-	let biwa;
-	
-	function init() {
-		input = document.querySelector("textarea#input");
-		output = document.querySelector("textarea#output");
-		button = document.querySelector("button#eval");
-		code = document.querySelector("code#output");
-		
-		document.querySelector("button#copy").addEventListener("click", function(event) {
-			output.select();
-			document.execCommand("copy");
-		}, false);
-		
-		button.addEventListener("click", evaluate, false);
-		
-		biwa = new BiwaScheme.Interpreter((e) => {	alert(e);
-													location.reload();});
-		
-	}
-	
-	function evaluate() {
-		biwa.evaluate("(generate '" + input.value + ")", function(result) {
-		  //alert(result);
-		  output.textContent = process(result);
-		});
-	}
-	
-	function process(str) {
-		/*if(str.includes("<html>") || str.includes("<head>") || str.includes("<body>")) {
-			alert("Error: Cannot process top level html-tags");
-		}*/
-		var div = document.createElement('div');
-		div.innerHTML = str.trim();
-
-		return format(div, 0).innerHTML;
-	}
-
-	function format(node, level) {
-
-		var indentBefore = new Array(level++ + 1).join('  '),
-			indentAfter  = new Array(level - 1).join('  '),
-			textNode;
-
-		for (var i = 0; i < node.children.length; i++) {
-
-			textNode = document.createTextNode('\n' + indentBefore);
-			node.insertBefore(textNode, node.children[i]);
-
-			format(node.children[i], level);
-
-			if (node.lastElementChild == node.children[i]) {
-				textNode = document.createTextNode('\n' + indentAfter);
-				node.appendChild(textNode);
-			}
-		}
-
-		return node;
-	}
-	
-	
-	</script>
+	<link rel="shortcut icon" href="res/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="res/favicon.ico" type="image/x-icon">
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/skeleton.css">
+	<link rel="stylesheet" type="text/css" href="css/stylesheet.css">
+	<title>Parens-2-HTML</title>
+	<script type="text/javascript" src="js/biwascheme.js" defer></script>
+	<script type="text/javascript" src="js/script.js" defer></script>
 </head>
 
 <body>
-	<header id="top">
-		<!--h2>'()-Markup</h2-->
-		<h2><span style="color:#6eb3d3;">'()</span> → <span style="color:#e67e22;">&lt;/&gt;</span></h2>
+	<header>
+		<div id="top">
+			<div id="title">
+				<img src="res/logo-light.png" width="100%">
+				<!--h2><span style="color:#6eb3d3;">'()</span> &rarr; <span style="color:#e67e22;">&lt;/&gt;</span></h2-->
+			</div>
+			
+			<button id="eval" class="button-primary">&rarr; Evaluate</button>
+			<select>
+				<option value="1">Tab Width: 1</option>
+				<option value="2" selected>Tab Width: 2</option>
+				<option value="3">Tab Width: 3</option>
+				<option value="4">Tab Width: 4</option>
+				<option value="5">Tab Width: 5</option>
+				<option value="6">Tab Width: 6</option>
+				<option value="7">Tab Width: 7</option>
+				<option value="8">Tab Width: 8</option>
+			</select>
+			<button id="copy">&#x2398; Copy HTML</button>
+		</div>
+
+		<footer>
+			<div id="description" hidden>
+				<h5><u>S-Expressions to HTML</u></h5>
+				<p>
+					This page uses a Scheme implementation in JavaScript <i>(<a href="https://www.biwascheme.org/">Biwa Scheme</a>)</i> and a simple list manipulation script, 
+					to convert S-Expressions to plain HTML. 
+				</p>
+				<p>	
+					These can be simpler to read and easier/faster to write 
+					in an early phase of rapid development and prototyping. 
+				</p>
+				<p>
+					See the example for reference on how to write HTML with it.
+				</p>
+			</div>
+			<br>
+			<center>
+				<div id="info" title="Info">?</div>
+				<p style="color: #aaa;"><i>Created by Yannik Wailzer 2019</i></p>
+				<a href="https://github.com/Tryops/parens2html">Project on Github</a>
+			</center>
+		</footer>
 	</header>
-	<main>
-		<code>
-			<textarea id="input" rows="10" cols="50"></textarea>
-			<!--b><div id="arrow">-></div></b-->
-			<textarea id="output" rows="4" cols="50"></textarea>
-		</code>
-		
-		<button id="eval">Evaluate</button>
-		<button id="copy">Copy</button>
-	</main>
+
+	<textarea id="input" contenteditable>
+;; S-Expressions:
+
+(table  (thead  (th #[id= "item"  class= "head"] "Item")
+                (th #[id= "size"  class= "head"] "Size")
+                (th #[id= "price" class= "head"] "Price"))
+
+        (tbody  (tr (td "Bike")
+                    (td "2m")
+                    (td "200$"))
+
+                (tr (td "Book")
+                    (td "30cm")
+                    (td "15$"))
+
+                (tr (td "Keyboard")
+                    (td "70cm")
+                    (td "50$"))))
+	</textarea>
+
+	<textarea id="output" contenteditable>
+<!-- HTML: -->
+<!-- (Press EVALUATE) -->
+	</textarea>
 	
 </body>
 </html>
